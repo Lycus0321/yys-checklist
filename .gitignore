@@ -26,6 +26,9 @@ pnpm-debug.log*
 # 构建期产物（S1.5 数据核对报告，可随时重跑生成）
 reports/
 
+# 本地下载的 CI 构建产物（GitHub Actions artifact 可随时重新下载）
+artifacts/
+
 # 本地环境与验证缓存
 .env
 .env.*
