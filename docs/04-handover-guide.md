@@ -122,7 +122,7 @@ npm run dev          # http://localhost:5173/
 | PWA / 离线 | **已接入**（2026-09-29，不再是待办）：`vite-plugin-pwa`（`generateSW`）产出 `sw.js` + `manifest.webmanifest`、19 条 precache；图标由 `npm run icons` 从 `favicon.svg` 生成；更新时机交给用户（`registerType: 'prompt'` + 设置页「应用更新」），**不静默刷新** | `vite.config.ts`、`src/services/pwa.ts`、`src/stores/pwa.ts`、`tools/make-icons.mjs`、`index.html` |
 | 数据快照热更新 | 不做：条目库随包发布 | `src/components/settings/DataVersionSection.tsx` |
 | 通知能力 | 2026-10-27 仅恢复**结界卡收/续点通知**：网页版在应用存活时轮询并弹普通浏览器通知；Android APK 通过 Capacitor Local Notifications 预交给系统，应用关闭后仍可触发。其他提醒仍不恢复 | `hooks/useNurtureNotifications.ts`、`services/notifications.ts`、`stores/device.ts`、`components/settings/NurtureNotificationSection.tsx`、`android/` |
-| Android APK | GitHub Actions 手动运行 `Android APK` workflow，构建 debug APK 并上传 artifact；本地需要 JDK 21 + Android SDK 36 + Gradle wrapper | `.github/workflows/android-apk.yml`、`capacitor.config.ts`、`android/` |
+| Android APK | GitHub Actions 构建 release APK；分支 push 上传 artifact，`v*` tag 自动创建 GitHub Release。签名密钥来自 Actions secrets，本地需要 JDK 21 + Android SDK 36 + Gradle wrapper | `.github/workflows/android-apk.yml`、`capacitor.config.ts`、`android/` |
 | 排序控件 | 按产品决策取消：排序由「**默认按条目库顺序** + 置顶 + 自定义顺序」决定（2026-09-30 起默认不再是痛感分）；`ViewPrefs.sortBy` 字段保留在数据层 | `src/domain/sort.ts`（原控件 `ViewBar` 已于 2026-09-28 删除） |
 | 痛感的其他出口 | 2026-09-15 收敛为「只作默认排序键」：`minWeight` 门槛（筛选项 + `isVisible` 判断）、今日页高痛感警示条（原 `SHOW_WEEKLY_ALERT`）、`missGroups` 漏失分级、`WEIGHT_LEGEND` 图例 **全部删除**（不是隐藏）。**2026-09-30 连痛感分本体也退场**：默认排序改按条目库顺序，`domain/weight.ts` 整个文件删除 | `pages/TodayPage.tsx`、`components/common/OnboardingDialog.tsx`、原 `domain/weight.ts`（已删）、`domain/sort.ts`（`cycleRank` 迁入） |
 | 读取游戏数据 | **长期不做**，属于产品定位而非待办 | `README.md` |

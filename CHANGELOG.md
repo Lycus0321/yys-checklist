@@ -21,6 +21,7 @@
 
 ### 修改
 
+- **README 与 UI 截图更新**（2026-10-27）：README 改为当前顶部索引签 + 通栏单列布局，修正“今日仍混排活动任务 / 电脑仍为左侧导航双列”的过期描述；重拍今日、限时、统计、御魂、移动端五张截图，并新增设置页与结界卡通知开关截图
 - **全库文档与代码的一致性核查**（2026-09-30 用户："看一下项目空间中的文本有和现在实际情况不符的地方，都统一进行修改"）：逐份核对 `README.md` / `AGENTS.md` / `docs/README` / `docs/01`～`06` / `tools/templates` / `tools/verify.js` 与两处代码注释，改掉的是两类问题 ——
   **① 功能级错误**（读者会照着写出错的东西）：`README` 的「清单是怎么排序的」整节仍在讲痛感分的四层规则、今日页还写着「常驻 · 活动」双 Tab（2026-09-28 已删）、设置页分区名「视图偏好」与实际标题「卡片显示字段」不符且没提**按页面四套**；`docs/04` 的硬性约束仍要求「`cycle` 为 `version` / `season` 时 `periods` 锚点必填」（周期与锚点 2026-09-28 已删）；`docs/06` 与两个录入模板仍把已删的 `blackDaruma` / `other` 当现存枚举；`AGENTS.md` 与 `docs/01` 仍把已删的 `.genso-daruma`（达摩点睛）列为现存 `.genso-*` 类；`docs/01` 的模块清单还列着已删的 `weight.ts`，`docs/02` 还引用已删的 `hooks/useApi.ts`、`docs/04` 的「保留但不可达」里还留着 2026-09-15 已删的 `SHOW_WEEKLY_ALERT`。
   **② 计数与版本滞后**：数据版本头 5 处仍是 `2026.09.28-周期收口为四类`（→ `2026.09.30-奖励类型收口`）；测试基线 4 处「21 文件 / 302 用例」（→ **27 / 407**）；`ApiClient` 2 处 32 个方法（→ **37**）；store 数 8 / 9 个（→ **11**）；domain 模块 14 / 16 个（→ **21**，补上漏登记的 `ids.ts`）；图标 36 枚（→ **45**，`docs/05` 保留快照值并加一条复核注）；字典 47 行（→ **38**）；`docs/02` 的方法分组表缺 6 个方法、`BootstrapPayload` / `UserDataBundle` 漏 `guildTime` / `plans`、「设备级键只剩 `yys:onboarded`」漏 `yys:theme`；`docs/03` 的分项用例表 5 处与实际不符（**相加 412 ≠ 总数 407**，已按 `npm test` 实测逐项改正，并去掉 `domain.test.ts` 说明里的 `weight`）；`docs/01` 的 store 表重写（补 `theme` / `guildTime` / `pwa` 三行、去掉 `normalizeView` / `isChecked` / `currentProfile` / `HIGH_WEIGHT` 等已删符号）、目录清单补 `pwa.ts` / `UpdateSection` / `useLongPress` / `ClearDataSection` 等；设置页描述由「4 组 9 分区」更正为「5 组」（含「关于」组）。
@@ -33,6 +34,7 @@
 
 ### 新增
 
+- **Android Release 与安装说明**（2026-10-27 用户："补充安卓端的说明，添加release"）：README 新增 Android 安装、升级、数据迁移与通知权限说明；GitHub Actions 增加稳定 release keystore 签名和 `v*` tag 自动发布，Release 附件改为可覆盖升级的 `yys-checklist-1.4.0-android.apk`
 - **Android APK 原生壳**（2026-10-27 用户："开发一版安卓apk"）：接入 Capacitor 8，新增 `android/` 工程与 `Android APK` GitHub Actions workflow，云端产出可安装的 `app-debug.apk`。结界卡通知在原生端改用 `@capacitor/local-notifications`：保存或修改结界卡时把未完成收/续点交给 Android 系统，应用关闭后仍可由系统触发；通知点击回到「工具 → 结界寄养」。原生 app id `com.jachinluo.yyschecklist`，版本 `1.4.0`（versionCode `10400`）
 - **结界卡到点通知**（2026-10-27 用户："用 pwa 先接入通知功能，先只添加通知结界卡功能"）：`hooks/useNurtureNotifications` 在应用存活时每分钟检查 `nextDue`，到点后通过 `services/notifications` 发一条普通浏览器通知，并用设备级 `yys:nurture-notice` 保存开关与最近提醒键，避免同一收/续点重复提醒；设置页「委托」新增「结界卡通知」开关，权限仍由浏览器控制。Service Worker 增加通知点击处理：已有窗口回到结界寄养，冷启动带 `?nurture=1` 进入。**能力边界如实写明**：应用完全关闭后不后台计时，不创建系统闹钟。`npm test` → 27 文件 / 412 用例全过
 - **「恢复默认顺序」按钮**（2026-09-30 用户要求"加一个我试试"）：条目管理标题右侧新增一颗，**只在真调过顺序时出现**（`overrides.order` 非空）—— 因为 `order` 一旦非空，`domain/sort.effectiveSortBy` 就判成 `custom` 并**接管默认排序**，用户此时在清单页看到的顺序与条目库无关，而此前除了"清掉整个覆盖层"（旁边那颗「恢复默认」）没有任何退路。它**只清 `order`**（走既有的 `saveOrder([])`，`effectiveSortBy([])` 自然退回 `db`），自建条目 / 隐藏记录 / 预设改写一概不碰；带二次确认（`tone: danger`，不可逆）。图标取 `undo`，与「恢复默认」的 `restore` 分工明确：**撤销用户自己的排序** vs 恢复数据出厂值

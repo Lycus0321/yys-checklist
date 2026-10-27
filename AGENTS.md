@@ -132,8 +132,8 @@ node tools/verify.js      # 一键验收：tsc + eslint + vitest + build + db:ch
 
 `reports/` 已被 `.gitignore` 忽略，可随时重跑生成。
 
-Android APK 走 **GitHub Actions**：`.github/workflows/android-apk.yml` 手动触发，
-产物为 `yys-checklist-android-debug` artifact。原生壳使用 Capacitor 8；结界卡通知经
+Android APK 走 **GitHub Actions**：`.github/workflows/android-apk.yml` 支持分支构建与
+`v*` tag 发布，正式 APK 使用 GitHub Secrets 中的稳定 release keystore 签名。原生壳使用 Capacitor 8；结界卡通知经
 `@capacitor/local-notifications` 交给 Android 系统调度，不是常驻后台进程。
 
 ---
