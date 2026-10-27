@@ -2,6 +2,9 @@ name: Android APK
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feat/android-apk
 
 permissions:
   contents: read
