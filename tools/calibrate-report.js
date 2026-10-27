@@ -129,7 +129,7 @@ const templateItem = {
   name: '（新条目名，2–24 字）',
   cycle: 'limited',
   path: '（入口路径，≤40 字）',
-  gainKind: ['jade', 'other'],
+  gainKind: ['jade', 'blueTicket'],
   gainNote: '（口径说明，≤40 字；浮动收益写「不计入固定收益」）',
   condition: '（触发条件，可选）',
   time: '20:00',

@@ -1,6 +1,6 @@
 # 04 · 接手上手与改动任务手册
 
-> 对应数据版本：`2026.09.30-奖励类型收口` ｜ 事实核对日期：2026-09-30
+> 对应数据版本：`2026.10.27-限时活动更新` ｜ 事实核对日期：2026-10-27
 > 本文回答：**第一次跑起来要做什么、常见改动怎么改、坏了怎么查**。
 > 每步都给出「触点文件 / 需要同步改的位置 / 必须跑的命令 / 怎么验证」。
 
@@ -16,7 +16,7 @@
 ```bash
 npm ci
 npm run db:check     # 先确认种子数据自洽（不依赖 node_modules 之外的东西）
-npm test             # 基线：27 文件 / 407 用例应全绿
+npm test             # 基线：27 文件 / 412 用例应全绿
 npm run dev          # http://localhost:5173/
 ```
 
@@ -121,7 +121,8 @@ npm run dev          # http://localhost:5173/
 | Http Adapter | 空壳，全部方法抛 `NOT_IMPLEMENTED`，端点映射已写在注释里 | `src/api/http/adapter.ts` |
 | PWA / 离线 | **已接入**（2026-09-29，不再是待办）：`vite-plugin-pwa`（`generateSW`）产出 `sw.js` + `manifest.webmanifest`、19 条 precache；图标由 `npm run icons` 从 `favicon.svg` 生成；更新时机交给用户（`registerType: 'prompt'` + 设置页「应用更新」），**不静默刷新** | `vite.config.ts`、`src/services/pwa.ts`、`src/stores/pwa.ts`、`tools/make-icons.mjs`、`index.html` |
 | 数据快照热更新 | 不做：条目库随包发布 | `src/components/settings/DataVersionSection.tsx` |
-| 提醒能力 | 2026-09-11 已整体下线（非待办）：无浏览器通知，相关存储键已删 | —— |
+| 通知能力 | 2026-10-27 仅恢复**结界卡收/续点通知**：网页版在应用存活时轮询并弹普通浏览器通知；Android APK 通过 Capacitor Local Notifications 预交给系统，应用关闭后仍可触发。其他提醒仍不恢复 | `hooks/useNurtureNotifications.ts`、`services/notifications.ts`、`stores/device.ts`、`components/settings/NurtureNotificationSection.tsx`、`android/` |
+| Android APK | GitHub Actions 手动运行 `Android APK` workflow，构建 debug APK 并上传 artifact；本地需要 JDK 21 + Android SDK 36 + Gradle wrapper | `.github/workflows/android-apk.yml`、`capacitor.config.ts`、`android/` |
 | 排序控件 | 按产品决策取消：排序由「**默认按条目库顺序** + 置顶 + 自定义顺序」决定（2026-09-30 起默认不再是痛感分）；`ViewPrefs.sortBy` 字段保留在数据层 | `src/domain/sort.ts`（原控件 `ViewBar` 已于 2026-09-28 删除） |
 | 痛感的其他出口 | 2026-09-15 收敛为「只作默认排序键」：`minWeight` 门槛（筛选项 + `isVisible` 判断）、今日页高痛感警示条（原 `SHOW_WEEKLY_ALERT`）、`missGroups` 漏失分级、`WEIGHT_LEGEND` 图例 **全部删除**（不是隐藏）。**2026-09-30 连痛感分本体也退场**：默认排序改按条目库顺序，`domain/weight.ts` 整个文件删除 | `pages/TodayPage.tsx`、`components/common/OnboardingDialog.tsx`、原 `domain/weight.ts`（已删）、`domain/sort.ts`（`cycleRank` 迁入） |
 | 读取游戏数据 | **长期不做**，属于产品定位而非待办 | `README.md` |
@@ -165,7 +166,7 @@ npm run dev          # http://localhost:5173/
 4. 不要给「隐藏 / 覆盖」赋予统计含义（会让统计口径与事实分叉）。
 5. 不要在渲染层判断条目是否到期（到期在数据层 `activeItems` 过滤）。
 6. 不要用正则从奖励文本反推奖励类型（历史误判案例见 `docs/03` 第 7 节）。
-7. 不要复活已删除字段（`value` / `time2` / `source` / `reward` / `entry` / `action`）与已下线的提醒能力。
+7. 不要复活已删除字段（`value` / `time2` / `source` / `reward` / `entry` / `action`）与旧提醒键 / 其他提醒能力；结界卡通知是 2026-10-27 唯一经确认恢复的通知。
 8. 不要把寮活动时间写进种子数据（各寮不同，展示层叠加才是对的）。
 9. 不要为了「更快」删掉 Mock 的延迟与 AbortSignal 处理（会让 UI 失去 loading / 竞态处理能力）。
 10. 不要在组件里读窗口宽度或写 `outline-none`（破坏断点唯一来源与焦点环）。

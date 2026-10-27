@@ -1,6 +1,6 @@
 # 03 · 约定、测试与工具链
 
-> 对应数据版本：`2026.09.30-奖励类型收口` ｜ 事实核对日期：2026-09-30
+> 对应数据版本：`2026.10.27-限时活动更新` ｜ 事实核对日期：2026-10-27
 > 本文回答：**哪些约束是被工具强制的、口径纪律落在哪个函数、怎么跑测试、数据怎么录入**。
 
 ## 1. 分层铁律与强制手段
@@ -85,7 +85,7 @@ TypeScript 为严格模式（`tsconfig.app.json`），`npm run build` 会先跑 
 | 运行器 | Vitest 5，`environment: 'node'`，`include: ['src/**/*.test.ts']` |
 | 位置约定 | **测试与被测代码同目录**（无独立 `tests/` 目录） |
 | localStorage 垫片 | `src/test/memoryStorage.ts`（`MemoryStorage` 记录每次 `setItem`；`installMemoryStorage()` 注入 `window.localStorage`） |
-| 总量 | **27 个测试文件 / 407 个用例**（2026-09-28 按 `npm test` 实测重算） |
+| 总量 | **27 个测试文件 / 412 个用例**（2026-10-27 按 `npm test` 实测重算） |
 
 ### 4.2 分布
 
@@ -105,7 +105,7 @@ TypeScript 为严格模式（`tsconfig.app.json`），`npm run build` 会先跑 
 | `domain/steps.test.ts` | 13（子步骤派生：单条与多次的步数 / 完成判定 / 当前步 / 缺省继承父） |
 | `domain/guildTime.test.ts` | 10 |
 | `domain/itemDraft.test.ts` | 4（草稿 → 条目的字段映射与归一：空白串、空 `gainKind`、整体覆盖、收益清洗） |
-| `domain/nurture.test.ts` | 41 |
+| `domain/nurture.test.ts` | 44 |
 | `domain/sort.test.ts` | 18 |
 | `domain/stats.test.ts` | 6 |
 | `domain/sync.test.ts` | 12 |
@@ -113,7 +113,7 @@ TypeScript 为严格模式（`tsconfig.app.json`），`npm run build` 会先跑 
 | `hooks/usePeriodRefresh.test.ts` | 8 |
 | `services/localStore.test.ts` | 6 |
 | `stores/check.test.ts` | 28 |
-| `stores/device.test.ts` | 4 |
+| `stores/device.test.ts` | 6 |
 | `stores/guildTime.test.ts` | 7 |
 | `stores/items.test.ts` | 7 |
 | `stores/nurture.test.ts` | 11 |
@@ -140,7 +140,7 @@ TypeScript 为严格模式（`tsconfig.app.json`），`npm run build` 会先跑 
 
 `reports/` 已被 `.gitignore` 忽略（可随时重跑生成），不要把它提交进仓库。
 
-> 提示：`tools/verify.js` 内部注释里的用例数（历史值）可能滞后于真实值，**以 `npm test` 输出为准**（当前 27 文件 / 407 用例）。
+> 提示：`tools/verify.js` 内部注释里的用例数（历史值）可能滞后于真实值，**以 `npm test` 输出为准**（当前 27 文件 / 412 用例）。
 
 ## 6. 数据录入流程
 

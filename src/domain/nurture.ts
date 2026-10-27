@@ -372,6 +372,33 @@ export interface NurtureDue {
   point: NurturePoint;
 }
 
+/** 设备级通知偏好：只记录是否开启，以及最近一次已提醒的点（用于跨刷新去重） */
+export interface NurtureNoticePrefs {
+  enabled: boolean;
+  lastKey?: string;
+}
+
+export const DEFAULT_NURTURE_NOTICE_PREFS: Readonly<NurtureNoticePrefs> = {
+  enabled: false,
+};
+
+/** 外部存储是外部输入：坏值一律回落为关闭，不因此让通知设置页崩掉 */
+export function sanitizeNurtureNoticePrefs(value: unknown): NurtureNoticePrefs {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return { ...DEFAULT_NURTURE_NOTICE_PREFS };
+  }
+  const row = value as Record<string, unknown>;
+  const lastKey = typeof row.lastKey === 'string' && row.lastKey ? row.lastKey : undefined;
+  return {
+    enabled: row.enabled === true,
+    ...(lastKey ? { lastKey } : {}),
+  };
+}
+
+/** 一次“到点”的唯一键：同一记录同一个点被重新排期后，会得到新的时间戳并再次提醒 */
+export const nurtureNoticeKey = (due: NurtureDue): string =>
+  `${due.record.id}:${due.point.index}:${due.point.ts}`;
+
 /**
  * 最紧要的一个待办点（供壳层的实时徽章用）：
  * 「进行中的结界卡任务」= `started` 且**还有未完成的点**；计划不背状态、不参与。
@@ -388,6 +415,19 @@ export function nextDue(records: NurtureRecord[], now: Date): NurtureDue | null 
     if (!best || point.ts < best.point.ts) best = { record, point };
   }
   return best;
+}
+
+/** 只提醒“已经到点”且尚未提醒过的下一个收/续点；未来点由调用方轮询等待 */
+export function shouldNotifyNurture(
+  due: NurtureDue,
+  now: Date,
+  prefs: NurtureNoticePrefs,
+): boolean {
+  return (
+    prefs.enabled &&
+    due.point.ts <= now.getTime() &&
+    prefs.lastKey !== nurtureNoticeKey(due)
+  );
 }
 
 /** 距某个收/续点还有多久的可读文案（徽章用，窄容器所以写紧凑：`2h15m` / `45 分` / `该收卡了`） */

@@ -8,6 +8,7 @@ import IconSprite from './components/icons/sprite';
 import MobileShell from './components/mobile/MobileShell';
 import { useBootstrap } from './hooks/useBootstrap';
 import { useBreakpoint } from './hooks/useBreakpoint';
+import { useNurtureNotifications } from './hooks/useNurtureNotifications';
 import { usePeriodRefresh } from './hooks/usePeriodRefresh';
 import { initPwa } from './services/pwa';
 import { useDeviceStore } from './stores/device';
@@ -37,8 +38,8 @@ function ErrorScreen({ message }: { message: string }) {
  * 「数据就绪 + 标记缺失」时才出现（`OnboardingDialog` 内部判定）。
  * 二次确认弹窗挂在顶层，调用方只需 `await askConfirm(...)`。
  *
- * 2026-09-11：原先这里还挂了 `useReminderEngine()`（提醒引擎，挂顶层以便应用一开着就工作），
- * 随 S7 提醒能力一并移除。
+ * 2026-09-11：原先这里挂了 `useReminderEngine()`，随 S7 提醒能力一并移除。
+ * 2026-10-27：只恢复结界卡到点通知（`useNurtureNotifications`），其余提醒不复活。
  *
  * 2026-09-23 换肤：
  *   - 挂 `IconSprite` —— 和风图标库是全站唯一的一份 `<symbol>` 定义（零 DOM 成本）；
@@ -47,6 +48,7 @@ function ErrorScreen({ message }: { message: string }) {
 export default function App() {
   useBootstrap();
   usePeriodRefresh();
+  useNurtureNotifications();
   const hydrate = useDeviceStore((s) => s.hydrate);
   const breakpoint = useBreakpoint();
   const error = useUiStore((s) => s.bootstrapError);

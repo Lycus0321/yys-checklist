@@ -18,7 +18,8 @@
  * 历史键（**按用户决策不做迁移，直接作废**）：`yys:guildTime` / `yys:plans` 在新版本中
  * 不再有任何读取点，旧值残留在本机无害；用户需要在新版里重新配置一次，或用设置页的
  * 「同步到其他账号」批量铺开。另有更早的 `yys:notify` / `yys:reminded`
- * 随 `S7 提醒能力` 下线删除。
+ * 随 `S7 提醒能力` 下线删除；2026-10-27 重新接入的通知只使用新的
+ * `yys:nurture-notice`，上述两个旧键仍不得复活。
  */
 
 export const NS = 'yys';
@@ -33,6 +34,11 @@ export const DEVICE_KEY = {
    * 没存过时跟随系统 `prefers-color-scheme`，系统也读不到才落回明版（见 `stores/theme`）。
    */
   theme: `${NS}:theme`,
+  /**
+   * 结界卡到点通知（2026-10-27）。设备级而非账号级：
+   * 浏览器通知权限属于当前设备 / 站点；`lastKey` 也只用于当前设备的去重。
+   */
+  nurtureNotice: `${NS}:nurture-notice`,
 } as const;
 
 function storage(): Storage | null {

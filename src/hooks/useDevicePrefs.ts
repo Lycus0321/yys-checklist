@@ -12,13 +12,25 @@ import { useDeviceStore } from '../stores/device';
 export function useDevicePrefs() {
   const onboarded = useDeviceStore((s) => s.onboarded);
   const hydrated = useDeviceStore((s) => s.hydrated);
+  const hydrate = useDeviceStore((s) => s.hydrate);
   const markOnboarded = useDeviceStore((s) => s.markOnboarded);
   const resetOnboarding = useDeviceStore((s) => s.resetOnboarding);
+  const notifyNurture = useDeviceStore((s) => s.notifyNurture);
+  const notificationPermission = useDeviceStore((s) => s.notificationPermission);
+  const enableNurtureNotice = useDeviceStore((s) => s.enableNurtureNotice);
+  const disableNurtureNotice = useDeviceStore((s) => s.disableNurtureNotice);
+  const refreshNotificationPermission = useDeviceStore((s) => s.refreshNotificationPermission);
 
   return {
     onboarded,
     hydrated,
+    hydrate,
     markOnboarded,
     resetOnboarding,
+    notifyNurture,
+    notificationPermission,
+    enableNurtureNotice,
+    disableNurtureNotice,
+    refreshNotificationPermission,
   };
 }

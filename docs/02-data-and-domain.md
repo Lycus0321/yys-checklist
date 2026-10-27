@@ -1,6 +1,6 @@
 # 02 · 数据层与领域逻辑
 
-> 对应数据版本：`2026.09.30-奖励类型收口` ｜ 事实核对日期：2026-09-30
+> 对应数据版本：`2026.10.27-限时活动更新` ｜ 事实核对日期：2026-10-27
 > 本文回答：**数据长什么样、从哪来、到哪去、规则写在哪个函数里**。
 > 本文只描述结构与规模，不逐条罗列条目明细 —— 明细以 `src/db/*.db.json` 为唯一真值。
 
@@ -71,8 +71,8 @@ VITE_API_MODE === 'http' ? new HttpApi(baseURL) : new MockApi()
 | `guild(profileId)` | `yys:guild:{profileId}` | 该账号的寮时间（`itemId -> HH:mm`）—— **2026-09-16 由设备级升格** |
 | `plans(profileId)` | `yys:plans:{profileId}` | 该账号的结界寄养任务 / 计划 —— **2026-09-16 由设备级升格** |
 
-设备级键（不挂账号，定义在 `services/localStore.ts` 的 `DEVICE_KEY`）：**只剩 `yys:onboarded` 与 `yys:theme`**
-（后者是"这台设备偏好明版还是暗版"，与玩哪个号无关，见 `stores/theme`）。
+设备级键（不挂账号，定义在 `services/localStore.ts` 的 `DEVICE_KEY`）：`yys:onboarded`、`yys:theme`、`yys:nurture-notice`
+（主题是"这台设备偏好明版还是暗版"，见 `stores/theme`；结界卡通知偏好与最近提醒去重键属于设备 / 浏览器权限，见 `stores/device`）。
 `yys:guildTime` 与 `yys:plans` 于 2026-09-16 升为上面的两个账号级分片（理由：寮时间取决于所在寮、
 寄养节奏取决于具体号的结界卡，都不是"这台手机的属性"；且只有变成账号级分片，它们才能随备份走）。
 **旧的两个设备级键不做迁移**（用户决策）：新版本不再有读取点，用户重新配置一次，
@@ -109,7 +109,7 @@ VITE_API_MODE === 'http' ? new HttpApi(baseURL) : new MockApi()
 | 文件 | 顶层 key | 规模 |
 | --- | --- | --- |
 | `items.db.json` | `items: Item[]` | **66 条**真正的常驻（每日 33 / 每周 29 / 每月 4） |
-| `limited.db.json` | `items: Item[]` | **25 条**非常驻（全部 `cycle: limited`，含 2026-09-28 并入的版本 / 赛季活动；带 `until` 的到期自动下线）。**录入规范见 `06`** |
+| `limited.db.json` | `items: Item[]` | **16 条**非常驻（全部 `cycle: limited`，含 2026-09-28 并入的版本 / 赛季活动；带 `until` 的到期自动下线）。**录入规范见 `06`** |
 | `yuhun.db.json` | `dungeons[]`、`dayTips[]`、`excluded[]` | 副本 **11**、日提示 **10**、排除项 **8** |
 | `souls.db.json` | `rows: SoulRow[]` | **70** 种御魂（`effect2` 70 条；`effect4` 57 条，13 种首领御魂无四件套） |
 | `bounty.db.json` | `shikigami[]`、`spots[]`、`shikigamiSpots[]`、`shikigamiClues[]` | 式神 **39**、地点 **64**、出处关系 **148**、线索词 **116** |
@@ -117,9 +117,9 @@ VITE_API_MODE === 'http' ? new HttpApi(baseURL) : new MockApi()
 | `users.db.json` | `users`、`profiles`、`states`、`viewPrefs`、`itemOverrides`、`sessions` | 各 1 条（`u_local` / `p_main`） |
 | `dataVersion.db.json` | `versions[]`：`db` / `version` / `updated`（可选 `snapshot` / `checksum`） | **7** 条（对应 meta / items / limited / yuhun / bounty / souls / users） |
 
-常驻 + 活动总计 **91 条**条目（改动数据后以 `npm run db:check` 的输出为准 —— 这两份库随活动增删）。
+常驻 + 活动总计 **82 条**条目（改动数据后以 `npm run db:check` 的输出为准 —— 这两份库随活动增删）。
 
-`meta` 关键字段：`version`（应用版本，如 `1.4.0`）、`dataVersion`（如 `2026.09.30-奖励类型收口`）、`resetHour`（= 0）。
+`meta` 关键字段：`version`（应用版本，如 `1.4.0`）、`dataVersion`（如 `2026.10.27-限时活动更新`）、`resetHour`（= 0）。
 （`periods` 版本 / 赛季锚点已于 2026-09-28 随周期合并删除，见 §7.1。）
 
 ### 4.2 条目字段规格
@@ -171,7 +171,7 @@ src/domain/enums.ts 的字面量联合类型  ←── 双向校验 ──→  
 | `guildTime.ts` | `GuildTimePrefs`（类型在 `api/types`，此处 re-export）、`isValidHm`、`guildTimeTargets`、`configuredCount`、`applyGuildTime`、`applyGuildTimeAll`、`withGuildTime` | 寮时间在展示层叠加（**不写回主数据**）。2026-09-16 起配置本身是**账号级**分片 |
 | `sync.ts` | `SyncPartKey` / `SyncPart` / `SYNC_PARTS`、`SyncSource` / `SyncPatch`、`defaultSyncKeys`、`applyParts`、`describeKeys` | 账号间配置同步：可同步内容清单 + **字段级接管**规则（只勾「一键日常覆盖」时不动目标的筛选与置顶）。勾选状态与日志刻意不在清单内 |
 | `steps.ts` | `isGroup`、`stepIds`、`stepTotal`、`doneSteps`、`isCardDone`、`currentStepIndex`、`stepView` | **子步骤派生**（2026-09-28，取代旧的 `grouping.ts`）：「做 N 次」写进数据（`Item.children`），一张卡 = 一个条目、一格 = 一步。进度 = 真实已完成的步数；`stepView` 是"子步骤缺省继承父"的唯一实现处。旧版按名字 `k/N` 猜分组 + 一整套缺员补丁随本版删除 |
-| `nurture.ts` | `NURTURE_HOURS`(6)、`MAX_NURTURE_N`(5)、`NurtureRecord`（含 `dones`）/ `NurturePoint`（含 `index` / `doneAt`）、`isHM` / `normalizeHM` / `nowHM` / `hmToDate`、`baseTsOf` / `nurturePointsFrom` / `recordPoints` / `nurturePoints`、`markPointDone` / `clearPointDone` / `nextPendingPoint`、`pointStats`、`NurtureDue` / `nextDue` / `dueText`、`nurtureId`、`makeNurture`、`sortNurture` | 结界寄养 6 小时收 / 续点派生：点列表 = 上卡点 + 逐点递推（`dones` 逐点记实际完成时间）；`nextDue` / `dueText` 供壳层常驻徽章用 |
+| `nurture.ts` | `NURTURE_HOURS`(6)、`MAX_NURTURE_N`(5)、`NurtureRecord`（含 `dones`）/ `NurturePoint`（含 `index` / `doneAt`）、`isHM` / `normalizeHM` / `nowHM` / `hmToDate`、`baseTsOf` / `nurturePointsFrom` / `recordPoints` / `nurturePoints`、`markPointDone` / `clearPointDone` / `nextPendingPoint`、`pointStats`、`NurtureDue` / `nextDue` / `dueText`、`NurtureNoticePrefs` / `sanitizeNurtureNoticePrefs` / `nurtureNoticeKey` / `shouldNotifyNurture`、`nurtureId`、`makeNurture`、`sortNurture` | 结界寄养 6 小时收 / 续点派生：点列表 = 上卡点 + 逐点递推（`dones` 逐点记实际完成时间）；`nextDue` / `dueText` 供壳层常驻徽章用；通知只在到点且去重键不同时返回 true |
 | `yuhun.ts` | `MODE_LABEL`、`WEEK_ORDER`、`DungeonDay`、`hasDayGrid`、`dungeonDay`、`resolveFollow`、`OldFollowInfo`、`oldFollowInfo`、`groupBySection` | 御魂副本轮换与掉落派生 |
 | `bounty.ts` | `BountySpotRef` / `BountyEntry` / `BountyUnionRow`、`buildBountyEntries`、`matchBounty`、`bountyUnion`、`fullCoverage`、`RankedEntry`、`pinMatches` | 悬赏出处派生、线索反查与并集 |
 | `dateLabel.ts` | `todayDateLabel`、`weekRangeLabel` | 顶部日期标签（纯展示，与重置口径无关） |
@@ -234,7 +234,7 @@ src/domain/enums.ts 的字面量联合类型  ←── 双向校验 ──→  
 - 导入：`prepareImportText`（校验 + 归一化，不写库）→ 用户确认五项计数（账号 / 勾选记录 / 自建条目 / 已隐藏 / 自定义排序）→ 手动输入「导入」二字 → `applyImportText` 写库并整库重载。
 - 校验：`domain/backup.validateBundle`（结构 + 归一化）、`summarize`（摘要）、`dataFreshness` / `STALE_DAYS`（快照新鲜度）、`MAX_BUNDLE_CHARS`（长度上限）。
 - schema 版本不同**只警告不拒绝**（保留「试试看」的机会），结构不合格直接拒绝。
-- 备份范围 = **全部账号的全部配置**：勾选、勾选日志、视图偏好、自建条目与排序、**寮时间、寄养任务**（后两项 2026-09-16 加入）。唯一的例外是设备级引导标记 `yys:onboarded` —— 它是"这台设备看过引导没有"，不是配置。
+- 备份范围 = **全部账号的全部配置**：勾选、勾选日志、视图偏好、自建条目与排序、**寮时间、寄养任务**（后两项 2026-09-16 加入）。设备级引导标记 `yys:onboarded`、主题 `yys:theme` 与结界卡通知偏好 `yys:nurture-notice` 不进备份。
 
 ### 7.6 结界寄养
 
@@ -242,6 +242,8 @@ src/domain/enums.ts 的字面量联合类型  ←── 双向校验 ──→  
 
 **2026-09-16 起记录本身是账号级**（`yys:plans:{profileId}`）：原注释写"与玩哪个号无关"站不住 —— 结界卡的种类与时长因号而异（太鼓 / 斗鱼 / 美食卡，6h / 12h…），上卡时间自然不同。落盘由"直写 localStorage"改为走契约 `api.savePlans`（**异步 + 失败回滚**，形态与 `stores/view` 一致）；读路径并入首屏 `getBootstrap().plans`，壳层的「下一次该收」徽章不再自己读本机数据，因此也不会再闪现上一个号的寄养列表。
 点模型（2026-09-15 重构）：`recordPoints` 输出 `[上卡点(index 0), 收/续点 1..n]`，第 k 点的预计时刻 = 前一点的「实际完成时间（`dones[k-1]`，没有就用它的预计时刻）」+ 6h。于是「记某个点完成」只把它**之后**的点往后挪、之前的点不动（早先那版整条重推会让用户以为任务被初始化了）；上卡点天然已完成且不接受改写，它由 `base` 决定。`baseTsOf` 是唯一的基准入口，展示 / 徽章 / `nextDue` 共用。
+
+结界卡通知（2026-10-27）：网页 PWA 由 `hooks/useNurtureNotifications` 在应用存活时每分钟检查 `nextDue`，到点后经 `services/notifications` 发普通浏览器通知；`domain/nurture.shouldNotifyNurture` 负责“已到点 + 开关开启 + 去重键不同”三个条件。Android APK 则把未完成收/续点经 `@capacitor/local-notifications` 预交给系统，应用关闭后仍可由系统本地通知触发。开关与网页去重键落在设备级 `yys:nurture-notice`，不随账号或备份走。原生通知带 `extra.source = nurture`，记录变化时先取消旧提醒再重建，避免改时间后留下幽灵闹钟。
 
 ### 7.7 御魂与悬赏派生
 

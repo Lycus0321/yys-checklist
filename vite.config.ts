@@ -51,6 +51,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        /* 自定义通知点击：聚焦已有窗口并发消息，冷启动则带 ?nurture=1 打开 */
+        importScripts: ['nurture-notification-sw.js'],
         /* 应用只有状态切换、没有 URL 路由，回退是保底（刷新子路径时不至于 404） */
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,

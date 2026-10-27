@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { create } from 'zustand';
 
 /**
@@ -25,7 +26,9 @@ interface PwaState {
 }
 
 const detectSupport = () =>
-  typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
+  !Capacitor.isNativePlatform()
+  && typeof navigator !== 'undefined'
+  && 'serviceWorker' in navigator;
 
 export const usePwaStore = create<PwaState>()((set) => ({
   supported: detectSupport(),

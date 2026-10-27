@@ -11,6 +11,14 @@
 
 ## [Unreleased]
 
+### 数据
+
+- `limited.db.json` 按 2026-10-14 / 10-21 维护公告更新（25 → 16）：归档全部已结束条目，续期今忆召唤，补录秋枫共赏及其领奖窗口、萌神诞世记、猫掌柜的皮肤屋、星命之谕、甘饴之遇、时运御魂自选、现世逢魔寮勋章UP、逢魔演武、现世妖约·上海五角场、糖果奇妙夜、百鬼弈、百鬼棋局、飞羽凌云与飞驰天地·此心寻义；数据版本升为 `2026.10.27-限时活动更新`，`npm run db:check` → 82 条条目 · 38 行字典 · 0 错误
+
+### 修复
+
+- `db:calibrate` 生成的录入门架仍把已删除的 `other` 写进 `gainKind`，改为现存的 `blueTicket`，避免照模板录入后被 `db:check` 判错
+
 ### 修改
 
 - **全库文档与代码的一致性核查**（2026-09-30 用户："看一下项目空间中的文本有和现在实际情况不符的地方，都统一进行修改"）：逐份核对 `README.md` / `AGENTS.md` / `docs/README` / `docs/01`～`06` / `tools/templates` / `tools/verify.js` 与两处代码注释，改掉的是两类问题 ——
@@ -25,6 +33,8 @@
 
 ### 新增
 
+- **Android APK 原生壳**（2026-10-27 用户："开发一版安卓apk"）：接入 Capacitor 8，新增 `android/` 工程与 `Android APK` GitHub Actions workflow，云端产出可安装的 `app-debug.apk`。结界卡通知在原生端改用 `@capacitor/local-notifications`：保存或修改结界卡时把未完成收/续点交给 Android 系统，应用关闭后仍可由系统触发；通知点击回到「工具 → 结界寄养」。原生 app id `com.jachinluo.yyschecklist`，版本 `1.4.0`（versionCode `10400`）
+- **结界卡到点通知**（2026-10-27 用户："用 pwa 先接入通知功能，先只添加通知结界卡功能"）：`hooks/useNurtureNotifications` 在应用存活时每分钟检查 `nextDue`，到点后通过 `services/notifications` 发一条普通浏览器通知，并用设备级 `yys:nurture-notice` 保存开关与最近提醒键，避免同一收/续点重复提醒；设置页「委托」新增「结界卡通知」开关，权限仍由浏览器控制。Service Worker 增加通知点击处理：已有窗口回到结界寄养，冷启动带 `?nurture=1` 进入。**能力边界如实写明**：应用完全关闭后不后台计时，不创建系统闹钟。`npm test` → 27 文件 / 412 用例全过
 - **「恢复默认顺序」按钮**（2026-09-30 用户要求"加一个我试试"）：条目管理标题右侧新增一颗，**只在真调过顺序时出现**（`overrides.order` 非空）—— 因为 `order` 一旦非空，`domain/sort.effectiveSortBy` 就判成 `custom` 并**接管默认排序**，用户此时在清单页看到的顺序与条目库无关，而此前除了"清掉整个覆盖层"（旁边那颗「恢复默认」）没有任何退路。它**只清 `order`**（走既有的 `saveOrder([])`，`effectiveSortBy([])` 自然退回 `db`），自建条目 / 隐藏记录 / 预设改写一概不碰；带二次确认（`tone: danger`，不可逆）。图标取 `undo`，与「恢复默认」的 `restore` 分工明确：**撤销用户自己的排序** vs 恢复数据出厂值
 - **卡片显示字段改为按页面四套**（2026-09-30 用户需求："今日 / 本周 / 本月 / 限时分别设置，有时候会出现每日想简要看、限时活动详细看的情况"）：`ViewPrefs.card` 由单份配置改为 `Partial<Record<CardScope, Partial<CardDisplay>>>`（`CardScope` = 四个清单页，与 `NavKey` 同名）。**用户明确"无需兼容之前的"，故不做数据迁移** —— 旧的单份形状不再被读取、各页回落默认（= 全部显示），旧字段留着不报错也不生效。新增 `domain/cardDisplay` 的 `CARD_SCOPES` / `CardScope` / `effectiveCardByScope`（四页各返回**独立副本** —— "改一页连坐另外三页"是这个功能最容易出的静默 bug，已用单测钉住）与 `hooks/useCardDisplay`（三个卡片组件过去各自 `useViewStore((s) => s.view.card)`，现在统一从这个出口按"当前页面"取；设置页的效果预览不在清单页里，显式传 `scope`）；`stores/view.setCardDisplay` 签名加 `scope`（只写这一页），`domain/sync` 跨账号搬 card 时改用 `effectiveCardByScope` 重建（浅拷外层会让两个账号共享内层对象）。设置页版面仍是"**一张卡 + 一个折叠**"：卡内右侧是三档预设、行下方一行是**页面页签**（带"作用页面"小标签）—— **两者必须同处一卡**（初版拆成两张卡，用户当即指出"太分离"：预设只是"一次设六项"的快捷键、页签与档位是同一件事的两层限定，拆开等于暗示它们可各自为政），预览改用**该页**信息最全的示例条目
 - **PWA / 离线能力接入**（2026-09-29，用户拍板"图标接受 PNG、更新时机交给用户"）：本应用一直自称"自查型 PWA"，但 manifest / Service Worker / 安装图标从未落地（`index.html` 里就写着"暂缓"）。这次补齐 —— ① **可安装**：`vite-plugin-pwa`（`generateSW`）产出 `sw.js` + `manifest.webmanifest`，**19 条 precache（504 KiB）**；四张图标由 `npm run icons`（`tools/make-icons.mjs`，sharp）从 `public/favicon.svg` **生成**而非手工裁（192 / 512 / maskable-512 / apple-touch-180，各档比例与理由写在脚本里）；`index.html` 补 iOS 专属 meta（`apple-mobile-web-app-*` + `apple-touch-icon`；`status-bar-style` 取 `default` 而**不是** `black-translucent` —— 本站亮色是米白底、系统状态栏文字为白，铺到状态栏下会读不出来），并删掉那句"暂缓"注释。② **离线可用**：应用运行时不发任何网络请求（数据在 localStorage、条目库随包发布、`api/http/adapter` 是空壳），故 SW 只需缓存静态外壳；三个按需 `import()` 的库（`yuhun` / `bounty` / `souls`）**已核对在 precache 清单里** —— 漏掉它们离线就查不了御魂 / 式神。③ **更新时机交给用户**：`registerType: 'prompt'` + `injectRegister: null`，注册收在 `src/services/pwa.ts`（要拿 `ServiceWorkerRegistration` 与"有新版待应用"两个信号喂给界面），设置页「关于」组新增 `UpdateSection`（平时「检查更新」/ 有新版换「重启更新」/ 一次性的"已是最新 / 检查失败"反馈），**不静默刷新**；新增 `stores/pwa.ts`（`supported` / `registered` / `needRefresh` / `offlineReady`，刻意不持久化 —— SW 活在浏览器层，刷新就要重新握手）。④ 验收口径：`npm run build` 的 `PWA ... precache N entries`、以及 DevTools 勾 Offline 后刷新仍能打开（此前这一步是白屏）

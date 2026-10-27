@@ -2,7 +2,7 @@
 
 > 本文件写给在本仓库工作的 AI 助手与开发者。**开工前先读本文件**，再按末尾「文档索引」按需深入。
 >
-> 对应数据版本：`2026.09.30-奖励类型收口` ｜ 事实核对日期：2026-09-30 ｜ 详细文档见 `docs/`
+> 对应数据版本：`2026.10.27-限时活动更新` ｜ 事实核对日期：2026-10-27 ｜ 详细文档见 `docs/`
 
 ## 这个项目是什么
 
@@ -72,7 +72,9 @@ Mock 的分片键由 `src/api/mock/persist.ts` 封装（`KEY` / `removeProfileSh
 ### 6. 不要「复活」已移除的东西
 
 - 已删除的条目字段：`value`（主观档）、`time2`、`source`、`reward`、`entry`、`action`。奖励文本字段是整体移除的，不要因为「看起来方便」而加回来。
-- 浏览器提醒能力已于 2026-09-11 整体下线（`yys:notify` / `yys:reminded` 键已删）。
+- 浏览器提醒能力曾于 2026-09-11 整体下线；2026-10-27 只恢复**结界卡收/续点到点通知**，
+  使用新键 `yys:nurture-notice`。`yys:notify` / `yys:reminded` 仍属已删除旧键，
+  其他提醒能力不要借机恢复。
 
 ### 7. 不要用正则从奖励文本反推奖励类型
 
@@ -117,16 +119,22 @@ git commit --message="..."
 ```bash
 npm ci                    # 按 lockfile 安装（Node 18+，实测 Node 24）
 npm run dev               # 开发服务，默认 http://localhost:5173/
-npm test                  # vitest run，单元测试（27 文件 / 407 用例）
+npm test                  # vitest run，单元测试（27 文件 / 412 用例）
 npm run lint              # eslint
 npm run build             # tsc -b && vite build → dist/（**随发布入库**，产物要一并提交）
 npm run db:check          # 数据校验 + 枚举双轨对齐，产物 reports/data-check.md
 npm run db:calibrate      # 数据核对报告，产物 reports/pending-review.*、reports/calibration.md
 npm run icons             # 生成 PWA 四张 PNG 图标（改 favicon.svg 后重跑）
+npm run android:sync      # 构建 Web 产物并同步到 Capacitor Android 工程
+npm run android:open      # 用 Android Studio 打开原生工程
 node tools/verify.js      # 一键验收：tsc + eslint + vitest + build + db:check，产物 reports/verify-<date>.md
 ```
 
 `reports/` 已被 `.gitignore` 忽略，可随时重跑生成。
+
+Android APK 走 **GitHub Actions**：`.github/workflows/android-apk.yml` 手动触发，
+产物为 `yys-checklist-android-debug` artifact。原生壳使用 Capacitor 8；结界卡通知经
+`@capacitor/local-notifications` 交给 Android 系统调度，不是常驻后台进程。
 
 ---
 

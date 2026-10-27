@@ -19,11 +19,14 @@ import {
   nextDue,
   nextPendingPoint,
   normalizeHM,
+  nurtureNoticeKey,
   nurturePoints,
   pointCountOf,
   pointStats,
   recordPoints,
   sanitizePlans,
+  sanitizeNurtureNoticePrefs,
+  shouldNotifyNurture,
   sortNurture,
   type NurtureRecord,
 } from './nurture';
@@ -260,6 +263,33 @@ describe('nextDue / dueText：跨任务取最紧要的待办点（壳层徽章�
     expect(dueText(base + 120 * 60000, NOW)).toBe('2h');
     expect(dueText(base, NOW)).toBe('该收卡了');
     expect(dueText(base - 1000, NOW)).toBe('该收卡了');
+  });
+});
+
+describe('结界卡通知：到点判定与去重', () => {
+  const prefs = { enabled: true };
+  const record = makeNurture('08:00', 18, true, NOW); // 14:00 / 20:00 / 02:00
+
+  it('未到点不提醒，到点且未提醒过才提醒', () => {
+    const due = nextDue([record], NOW)!;
+    expect(shouldNotifyNurture(due, new Date(2026, 8, 10, 13, 59), prefs)).toBe(false);
+    expect(shouldNotifyNurture(due, NOW, prefs)).toBe(true);
+    expect(shouldNotifyNurture(due, NOW, { enabled: false })).toBe(false);
+  });
+
+  it('同一个点提醒后去重；点被重新排期则生成新键', () => {
+    const due = nextDue([record], NOW)!;
+    const sent = { enabled: true, lastKey: nurtureNoticeKey(due) };
+    expect(shouldNotifyNurture(due, NOW, sent)).toBe(false);
+    expect(nurtureNoticeKey({ ...due, point: { ...due.point, ts: due.point.ts + 60000 } }))
+      .not.toBe(sent.lastKey);
+  });
+
+  it('净化通知偏好：坏值回落关闭，合法去重键保留', () => {
+    expect(sanitizeNurtureNoticePrefs(null)).toEqual({ enabled: false });
+    expect(sanitizeNurtureNoticePrefs({ enabled: 'yes', lastKey: 42 })).toEqual({ enabled: false });
+    expect(sanitizeNurtureNoticePrefs({ enabled: true, lastKey: 'nr_1:1:123' }))
+      .toEqual({ enabled: true, lastKey: 'nr_1:1:123' });
   });
 });
 

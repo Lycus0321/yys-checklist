@@ -6,6 +6,7 @@ import { sectionNo } from '../components/common/sectionNo';
 import AboutSection from '../components/settings/AboutSection';
 import BackupSection from '../components/settings/BackupSection';
 import DataVersionSection from '../components/settings/DataVersionSection';
+import NurtureNotificationSection from '../components/settings/NurtureNotificationSection';
 import UpdateSection from '../components/settings/UpdateSection';
 import { useItemStore } from '../stores/items';
 import { useThemeStore, type Theme } from '../stores/theme';
@@ -93,6 +94,7 @@ export default function MePage() {
       </SectionTitle>
       <div className={rows}>
         <AutoDailySection />
+        <NurtureNotificationSection />
         <ItemManagerSection />
       </div>
 

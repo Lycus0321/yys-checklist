@@ -3,6 +3,7 @@ import Icon from '../icons/Icon';
 import SettingRow from '../common/SettingRow';
 import { btn, tx } from '../common/controls';
 import { applyUpdate, checkForUpdate } from '../../services/pwa';
+import { isNativeApp } from '../../services/notifications';
 import { usePwaStore } from '../../stores/pwa';
 
 /** 「检查更新」的一次性反馈；`preparing` 是"新版正在下载"的中间态 */
@@ -37,6 +38,7 @@ export default function UpdateSection() {
   const supported = usePwaStore((s) => s.supported);
   const needRefresh = usePwaStore((s) => s.needRefresh);
   const offlineReady = usePwaStore((s) => s.offlineReady);
+  const native = isNativeApp();
   const [state, setState] = useState<CheckState>('idle');
 
   const onCheck = async () => {
@@ -60,7 +62,9 @@ export default function UpdateSection() {
           ? '检查失败 —— 多半是当前没联网，等联网后再试'
           : '';
 
-  const desc = needRefresh
+  const desc = native
+    ? 'Android 版通过安装新 APK 更新'
+    : needRefresh
     ? '新版本已经下载好了，重启后生效'
     : supported
       ? `装到主屏后可离线使用，只有取新版本时才需要联网${
@@ -73,7 +77,9 @@ export default function UpdateSection() {
       title="应用更新"
       desc={desc}
       control={
-        needRefresh ? (
+        native ? (
+          <span className={`${tx.note} text-ink-3`}>APK</span>
+        ) : needRefresh ? (
           <button
             type="button"
             onClick={applyUpdate}
