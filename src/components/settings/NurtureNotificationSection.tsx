@@ -3,6 +3,10 @@ import Icon from '../icons/Icon';
 import SettingRow from '../common/SettingRow';
 import { btn, tx } from '../common/controls';
 import { useDevicePrefs } from '../../hooks/useDevicePrefs';
+import {
+  isNativeApp,
+  showNativeTestNotification,
+} from '../../services/notifications';
 
 /**
  * 结界卡到点通知。设备级开关与浏览器权限分开存储：
@@ -20,6 +24,8 @@ export default function NurtureNotificationSection() {
   } = useDevicePrefs();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const native = isNativeApp();
 
   useEffect(() => {
     hydrate();
@@ -36,11 +42,16 @@ export default function NurtureNotificationSection() {
     : blocked
       ? '通知权限已被浏览器阻止，请在站点设置中恢复'
       : active
-        ? '应用运行时，结界卡到收/续点提醒一次；关闭应用后不保证触发'
-        : '开启后，应用运行时到点提醒；需浏览器通知权限';
+        ? native
+          ? '下一个收/续点由 Android 系统提醒；应用关闭后仍可触发'
+          : '应用运行时，结界卡到收/续点提醒一次；关闭应用后不保证触发'
+        : native
+          ? '开启后，系统会在结界卡收/续点提醒；需通知权限'
+          : '开启后，应用运行时到点提醒；需浏览器通知权限';
 
   const onToggle = async () => {
     setError('');
+    setFeedback('');
     setBusy(true);
     try {
       if (active) {
@@ -54,6 +65,20 @@ export default function NurtureNotificationSection() {
       else if (result === 'error') setError('通知设置保存失败，请检查浏览器存储权限');
     } catch {
       setError('通知权限请求失败，请稍后重试');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onTest = async () => {
+    setError('');
+    setFeedback('');
+    setBusy(true);
+    try {
+      await showNativeTestNotification();
+      setFeedback('测试通知已发送，约 1 秒后显示');
+    } catch {
+      setError('测试通知发送失败，请检查通知权限');
     } finally {
       setBusy(false);
     }
@@ -74,17 +99,34 @@ export default function NurtureNotificationSection() {
       title="结界卡通知"
       desc={desc}
       control={
-        <button
-          type="button"
-          disabled={!hydrated || busy || unsupported || blocked}
-          onClick={() => void onToggle()}
-          className={`${btn.base} ${btn.sm} ${active ? btn.out : btn.sec}`}
-        >
-          <Icon name="tokei" size={12} />
-          {label}
-        </button>
+        <>
+          {native && active ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void onTest()}
+              className={`${btn.base} ${btn.sm} ${btn.out}`}
+            >
+              测试通知
+            </button>
+          ) : null}
+          <button
+            type="button"
+            disabled={!hydrated || busy || unsupported || blocked}
+            onClick={() => void onToggle()}
+            className={`${btn.base} ${btn.sm} ${active ? btn.out : btn.sec}`}
+          >
+            <Icon name="tokei" size={12} />
+            {label}
+          </button>
+        </>
       }
     >
+      {feedback ? (
+        <p className={`${tx.note} text-gold-hi`} role="status">
+          {feedback}
+        </p>
+      ) : null}
       {error ? (
         <p className={`${tx.message} text-danger`} role="alert">
           {error}

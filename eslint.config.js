@@ -27,6 +27,7 @@ export default tseslint.config(
     ignores: [
       'dist',
       'node_modules',
+      'android',
       'data',
       'prototype',
       'src/db',

@@ -178,6 +178,36 @@ export async function syncNativeNurtureNotifications(
   }
 }
 
+/** 用户在设置页主动验证通知链路；不走精确闹钟，也不受收/续点时间影响 */
+export async function showNativeTestNotification(): Promise<void> {
+  if (!isNativeApp()) return;
+  if ((await getDeviceNotificationPermission()) !== 'granted') {
+    throw new Error('通知权限未授予');
+  }
+
+  await LocalNotifications.createChannel({
+    id: NATIVE_CHANNEL,
+    name: '结界卡提醒',
+    description: '结界卡收/续点到点提醒',
+    importance: 4,
+    visibility: 1,
+    vibration: true,
+  });
+  await LocalNotifications.schedule({
+    notifications: [
+      {
+        id: 2147483000,
+        title: '结界卡通知已接通',
+        body: '下一个收/续点到达时，系统会在这里提醒你。',
+        channelId: NATIVE_CHANNEL,
+        schedule: { at: new Date(Date.now() + 1200) },
+        extra: { source: 'nurture', test: true },
+        foreground: true,
+      },
+    ],
+  });
+}
+
 /** 原生通知点击：应用被杀后由插件在启动时派发 */
 export async function listenNativeNurtureClick(handler: () => void): Promise<() => void> {
   if (!isNativeApp()) return () => undefined;
